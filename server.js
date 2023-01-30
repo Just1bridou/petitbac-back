@@ -36,17 +36,24 @@ const lobbyRoutes = require("./routes/lobby.js");
  * Socket connection
  */
 io.on("connection", (socket) => {
-  logger.info("WS : New user connected");
+  logger.info("SV : New user connected");
   /**
    * Save user's socket when connection is established
    */
   socket.on("saveUser", ({ uuid }) => {
-    socket.uuid = uuid;
-    SocketManager.connectUser(uuid, socket);
+    logger.info(`SV : Con ${socket.id} registered as ${uuid}`);
+    // socket.uuid = uuid;
+    SocketManager.registerConnection(uuid, socket);
+    let totalUser = UserManager.getTotalUsers();
+    SocketManager.sendToUser(uuid, "updateOnlineUsers", {
+      onlineUsers: totalUser,
+    });
   });
 
   socket.on("disconnected", () => {
-    console.log("user disconnected");
+    logger.info(`SV : User ${socket.id} disconnected`);
+    let userUUID = SocketManager.disconnectUser(socket.id);
+    UserManager.deleteUser(userUUID);
   });
 
   loginRoute.listen(socket);

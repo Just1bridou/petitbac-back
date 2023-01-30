@@ -4,7 +4,15 @@ const { v4 } = require("uuid");
 
 const logger = require("../tools/logger.js");
 
+module.exports = { clear, createParty, get, updateOnlineParties };
+
 let parties = [];
+/**
+ * Life monitor
+ */
+setInterval(() => {
+  logger.warn(`PM : Actually party count: ${Object.keys(parties).length}`);
+}, 10000);
 
 function clear() {
   parties = [];
@@ -37,4 +45,10 @@ function get(uuid) {
   return parties[uuid];
 }
 
-module.exports = { clear, createParty, get };
+function updateOnlineParties(uuid) {
+  SocketManager.sendToUser(uuid, "updateOnlineParties", {
+    parties: Object.keys(parties)
+      .map((key) => parties[key])
+      .filter((party) => party.visibility === "public"),
+  });
+}
