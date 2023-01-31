@@ -24,6 +24,7 @@ module.exports = {
   sendToList,
   print,
   disconnectUser,
+  broadcastToParty,
 };
 /**
  * Life monitor
@@ -67,6 +68,13 @@ function broadcast(event, data) {
   for (let socket in sockets) {
     // console.log("SM : send to " + socket);
     sockets[socket].emit(event, data);
+  }
+}
+
+function broadcastToParty(party, event, data) {
+  logger.info(`SM : broadcast party '${event}' to ${party.users.length}`);
+  for (let user of party.users) {
+    sockets[user.uuid].emit(event, data);
   }
 }
 

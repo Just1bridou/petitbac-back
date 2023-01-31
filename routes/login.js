@@ -8,6 +8,20 @@ function listen(socket) {
     PartyManager.updateOnlineParties(uuid);
     cb({ user });
   });
+
+  socket.on("joinRoom", ({ uuid, pseudo, roomUUID }, cb) => {
+    let user = UserManager.createUser(uuid, pseudo);
+    user.actualPartyUUID = roomUUID;
+    let ack = PartyManager.addUserToParty(user, roomUUID);
+    let party = PartyManager.get(roomUUID);
+
+    if (!ack) {
+      cb({ error: "Room not found" });
+      return;
+    } else {
+      cb({ user, party });
+    }
+  });
 }
 
 module.exports = { listen };

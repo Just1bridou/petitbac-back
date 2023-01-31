@@ -1,4 +1,5 @@
 const SocketManager = require("../manager/socketManager.js");
+const PartyManager = require("../manager/partyManager.js");
 
 const logger = require("../tools/logger.js");
 
@@ -28,6 +29,7 @@ function createUser(uuid, pseudo) {
     pseudo: pseudo,
   };
   users[uuid] = user;
+  logger.warn(`UM : Actually connected users: ${Object.keys(users).length}`);
   SocketManager.broadcast("updateOnlineUsers", {
     onlineUsers: Object.keys(users).length,
   });

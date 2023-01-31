@@ -11,6 +11,8 @@ module.exports = {
   updateOnlineParties,
   deleteUserFromParty,
   updateAllOnlineParties,
+  addUserToParty,
+  sendRefreshParty,
 };
 
 let parties = [];
@@ -27,7 +29,7 @@ function clear() {
 
 function createParty() {
   const party = {
-    uuid: v4(),
+    uuid: generateRoomToken(),
     users: [],
     visibility: "public",
     mode: "classic",
@@ -83,4 +85,42 @@ function deleteUserFromParty(userUUID, partyUUID) {
       parties: Object.keys(parties).map((key) => parties[key]),
     });
   }
+}
+
+function sendRefreshParty(partyUUID) {
+  let party = parties[partyUUID];
+  if (!party) return;
+  SocketManager.broadcastToParty(party, "updateParty", {
+    party: party,
+  });
+}
+
+function addUserToParty(user, partyUUID) {
+  let party = parties[partyUUID];
+
+  if (!party) return false;
+
+  party.users.push(user);
+
+  SocketManager.broadcastToParty(party, "updateParty", {
+    party: party,
+  });
+
+  // SocketManager.broadcast("updateOnlineParties", {
+  //   parties: Object.keys(parties).map((key) => parties[key]),
+  // });
+
+  return true;
+}
+
+/**
+ * Generate room token
+ * @returns token
+ */
+function generateRoomToken() {
+  var firstPart = (Math.random() * 46656) | 0;
+  var secondPart = (Math.random() * 46656) | 0;
+  firstPart = ("000" + firstPart.toString(36)).slice(-3);
+  secondPart = ("000" + secondPart.toString(36)).slice(-3);
+  return firstPart + secondPart;
 }

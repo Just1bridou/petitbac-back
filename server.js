@@ -13,6 +13,7 @@ const io = new Server(server, {
 });
 require("dotenv").config();
 const logger = require("./tools/logger.js");
+const lod_ = require("lodash");
 /**
  * Custom packages
  */
@@ -54,10 +55,19 @@ io.on("connection", (socket) => {
     logger.info(`SV : User ${socket.id} disconnected`);
     let userUUID = SocketManager.disconnectUser(socket.id);
     let user = UserManager.get(userUUID);
+
+    // let partyUUID = lod_.cloneDeep(user?.actualPartyUUID);
+
     if (user?.actualPartyUUID) {
       PartyManager.deleteUserFromParty(userUUID, user.actualPartyUUID);
     }
+
     UserManager.deleteUser(userUUID);
+
+    logger.error(user?.actualPartyUUID);
+    if (user?.actualPartyUUID) {
+      PartyManager.sendRefreshParty(user?.actualPartyUUID);
+    }
   });
 
   loginRoute.listen(socket);
