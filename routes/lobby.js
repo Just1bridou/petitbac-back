@@ -17,7 +17,10 @@ function listen(socket) {
     /**
      * Add user to party
      */
-    PartyManager.get(party.uuid).users.push(user);
+    user.actualPartyUUID = party.uuid;
+    party.users.push(user);
+
+    PartyManager.updateAllOnlineParties();
 
     cb({ party });
   });

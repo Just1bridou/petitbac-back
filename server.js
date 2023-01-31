@@ -53,6 +53,10 @@ io.on("connection", (socket) => {
   socket.on("disconnected", () => {
     logger.info(`SV : User ${socket.id} disconnected`);
     let userUUID = SocketManager.disconnectUser(socket.id);
+    let user = UserManager.get(userUUID);
+    if (user?.actualPartyUUID) {
+      PartyManager.deleteUserFromParty(userUUID, user.actualPartyUUID);
+    }
     UserManager.deleteUser(userUUID);
   });
 
