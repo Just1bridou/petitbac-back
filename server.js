@@ -33,6 +33,7 @@ PartyManager.clear();
  */
 const loginRoute = require("./routes/login.js");
 const lobbyRoutes = require("./routes/lobby.js");
+const waitingRoutes = require("./routes/waiting.js");
 /**
  * Socket connection
  */
@@ -64,7 +65,6 @@ io.on("connection", (socket) => {
 
     UserManager.deleteUser(userUUID);
 
-    logger.error(user?.actualPartyUUID);
     if (user?.actualPartyUUID) {
       PartyManager.sendRefreshParty(user?.actualPartyUUID);
     }
@@ -72,6 +72,7 @@ io.on("connection", (socket) => {
 
   loginRoute.listen(socket);
   lobbyRoutes.listen(socket);
+  waitingRoutes.listen(socket);
 });
 
 app.get("/sockets", (req, res) => {

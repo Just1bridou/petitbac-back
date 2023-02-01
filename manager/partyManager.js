@@ -31,13 +31,23 @@ function createParty() {
   const party = {
     uuid: generateRoomToken(),
     users: [],
-    visibility: "public",
-    mode: "classic",
-    rounds: 3,
-    time: 60,
     status: "waiting",
     words: ["prenom", "métier", "animal"],
     language: "FR",
+    /**
+     * Game mode
+     * - classic
+     * - random
+     */
+    mode: "classic",
+    /**
+     * Settings
+     * - public
+     * - private
+     */
+    visibility: "private",
+    rounds: 3,
+    time: 60,
   };
 
   logger.info(`Creating party ${party.uuid}`);
@@ -74,7 +84,8 @@ function updateAllOnlineParties() {
 
 function deleteUserFromParty(userUUID, partyUUID) {
   let party = parties[partyUUID];
-  let user = party.users.find((user) => user.uuid === userUUID);
+  if (!party) return;
+  let user = party?.users?.find((user) => user.uuid === userUUID);
   let userIndex = party.users.indexOf(user);
   party.users.splice(userIndex, 1);
 
