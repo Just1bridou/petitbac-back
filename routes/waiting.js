@@ -16,7 +16,6 @@ function listen(socket) {
     if (!party) return;
     party.mode = mode;
     PartyManager.sendRefreshParty(uuid);
-    PartyManager.updateAllOnlineParties();
   });
 
   socket.on("changePartyTime", ({ uuid, time }) => {
@@ -35,13 +34,19 @@ function listen(socket) {
 
     party.time = time;
     PartyManager.sendRefreshParty(uuid);
-    PartyManager.updateAllOnlineParties();
   });
 
   socket.on("changePartyRounds", ({ uuid, rounds }) => {
     let party = PartyManager.get(uuid);
     if (!party) return;
     party.rounds = rounds;
+    PartyManager.sendRefreshParty(uuid);
+  });
+
+  socket.on("changePartyLanguage", ({ uuid, language }) => {
+    let party = PartyManager.get(uuid);
+    if (!party) return;
+    party.language = language;
     PartyManager.sendRefreshParty(uuid);
     PartyManager.updateAllOnlineParties();
   });
@@ -65,6 +70,28 @@ function listen(socket) {
 
     PartyManager.sendRefreshParty(uuid);
     PartyManager.updateAllOnlineParties();
+  });
+
+  socket.on("readyUser", ({ partyUUID, uuid }) => {
+    let party = PartyManager.get(partyUUID);
+    if (!party) return;
+
+    let user = party.users.find((u) => u.uuid === uuid);
+
+    let ready = user.ready ?? false;
+    user.ready = !ready;
+
+    PartyManager.sendRefreshParty(partyUUID);
+  });
+
+  socket.on("kickUser", ({ partyUUID, uuid }) => {
+    let party = PartyManager.get(partyUUID);
+    if (!party) return;
+
+    party.users = party.users.filter((u) => u.uuid !== uuid);
+
+    PartyManager.sendRefreshParty(partyUUID);
+    SocketManager.sendToUser(uuid, "kickParty", {});
   });
 }
 
