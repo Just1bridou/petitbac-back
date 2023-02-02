@@ -47,7 +47,7 @@ function createParty() {
      */
     visibility: "private",
     rounds: 3,
-    time: 60,
+    time: "60",
   };
 
   logger.info(`Creating party ${party.uuid}`);
