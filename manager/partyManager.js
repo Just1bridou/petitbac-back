@@ -48,6 +48,10 @@ function createParty() {
     visibility: "private",
     rounds: 3,
     time: "60",
+    /**
+     * Chat feed
+     */
+    chat: [],
   };
 
   logger.info(`Creating party ${party.uuid}`);

@@ -34,6 +34,7 @@ PartyManager.clear();
 const loginRoute = require("./routes/login.js");
 const lobbyRoutes = require("./routes/lobby.js");
 const waitingRoutes = require("./routes/waiting.js");
+const chatRoutes = require("./routes/chat.js");
 /**
  * Socket connection
  */
@@ -73,6 +74,7 @@ io.on("connection", (socket) => {
   loginRoute.listen(socket);
   lobbyRoutes.listen(socket);
   waitingRoutes.listen(socket);
+  chatRoutes.listen(socket);
 });
 
 app.get("/sockets", (req, res) => {

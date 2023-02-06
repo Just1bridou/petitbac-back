@@ -54,7 +54,7 @@ function registerConnection(uuid, socket) {
 }
 
 function sendToUser(uuid, event, data) {
-  logger.info(`SM : send to ${uuid} '${event}'`);
+  logger.info(`SM : send to ${uuid} '${event}' with sID ${sockets[uuid]?.id}`);
 
   if (sockets[uuid] !== undefined) {
     sockets[uuid].emit(event, data);
@@ -66,7 +66,6 @@ function sendToUser(uuid, event, data) {
 function broadcast(event, data) {
   logger.info(`SM : broadcast '${event}' to ${Object.keys(sockets).length}`);
   for (let socket in sockets) {
-    // console.log("SM : send to " + socket);
     sockets[socket].emit(event, data);
   }
 }
@@ -75,8 +74,9 @@ function broadcastToParty(party, event, data) {
   logger.info(`SM : broadcast party '${event}' to ${party.users.length}`);
   for (let user of party.users) {
     console.log(
-      `send user ${user.uuid} ${event} with sID ${sockets[user.uuid].id}`
+      `send user ${user.uuid} ${event} with sID ${sockets[user.uuid]?.id}`
     );
+    if (!sockets[user.uuid]) return;
     sockets[user.uuid].emit(event, data);
   }
 }
