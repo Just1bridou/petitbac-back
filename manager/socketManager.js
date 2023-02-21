@@ -73,9 +73,9 @@ function broadcast(event, data) {
 function broadcastToParty(party, event, data) {
   logger.info(`SM : broadcast party '${event}' to ${party.users.length}`);
   for (let user of party.users) {
-    console.log(
-      `send user ${user.uuid} ${event} with sID ${sockets[user.uuid]?.id}`
-    );
+    // console.log(
+    //   `send user ${user.uuid} ${event} with sID ${sockets[user.uuid]?.id}`
+    // );
     if (!sockets[user.uuid]) return;
     sockets[user.uuid].emit(event, data);
   }

@@ -74,14 +74,16 @@ function listen(socket) {
 
   socket.on("readyUser", ({ partyUUID, uuid }) => {
     let party = PartyManager.get(partyUUID);
-    if (!party) return;
+    if (!party || party.status !== "waiting") return;
 
     let user = party.users.find((u) => u.uuid === uuid);
 
     let ready = user.ready ?? false;
     user.ready = !ready;
-
+    // send updated party to users
     PartyManager.sendRefreshParty(partyUUID);
+    // try to start game if all ready
+    PartyManager.lookingForStartGame(party);
   });
 
   socket.on("kickUser", ({ partyUUID, uuid }) => {

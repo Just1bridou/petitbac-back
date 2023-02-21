@@ -3,6 +3,7 @@ const SocketManager = require("../manager/socketManager.js");
 const { v4 } = require("uuid");
 
 const logger = require("../tools/logger.js");
+const { getRandomWords } = require("./database.js");
 
 module.exports = {
   clear,
@@ -13,9 +14,13 @@ module.exports = {
   updateAllOnlineParties,
   addUserToParty,
   sendRefreshParty,
+  lookingForStartGame,
+  getChrono,
 };
 
+const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let parties = [];
+let chronoLinker = [];
 /**
  * Life monitor
  */
@@ -52,6 +57,15 @@ function createParty() {
      * Chat feed
      */
     chat: [],
+    /**
+     * GAME DATA
+     */
+    lettersHistory: [], // Letters already used in previous rounds
+    score: [], // Score of each user
+    answers: [], // Answers of each user after completing a round
+    // currentRound: 1,
+    // currentLetter : "L",
+    // score: [],
   };
 
   logger.info(`Creating party ${party.uuid}`);
@@ -59,6 +73,10 @@ function createParty() {
   parties[party.uuid] = party;
 
   return party;
+}
+
+function getChrono(uuid) {
+  return chronoLinker[uuid];
 }
 
 function get(uuid) {
@@ -72,7 +90,9 @@ function updateOnlineParties(uuid) {
   SocketManager.sendToUser(uuid, "updateOnlineParties", {
     parties: Object.keys(parties)
       .map((key) => parties[key])
-      .filter((party) => party.visibility === "public"),
+      .filter(
+        (party) => party.visibility === "public" && party.status === "waiting"
+      ),
   });
 }
 /**
@@ -82,7 +102,9 @@ function updateAllOnlineParties() {
   SocketManager.broadcast("updateOnlineParties", {
     parties: Object.keys(parties)
       .map((key) => parties[key])
-      .filter((party) => party.visibility === "public"),
+      .filter(
+        (party) => party.visibility === "public" && party.status === "waiting"
+      ),
   });
 }
 
@@ -94,6 +116,11 @@ function deleteUserFromParty(userUUID, partyUUID) {
   party.users.splice(userIndex, 1);
 
   if (party.users.length === 0) {
+    let chrono = chronoLinker[partyUUID];
+    if (chrono) {
+      clearInterval(chrono);
+      delete chronoLinker[partyUUID];
+    }
     delete parties[partyUUID];
 
     SocketManager.broadcast("updateOnlineParties", {
@@ -113,18 +140,13 @@ function sendRefreshParty(partyUUID) {
 function addUserToParty(user, partyUUID) {
   let party = parties[partyUUID];
 
-  if (!party) return false;
+  if (!party || party.status !== "waiting") return false;
 
   party.users.push(user);
 
   SocketManager.broadcastToParty(party, "updateParty", {
     party: party,
   });
-
-  // SocketManager.broadcast("updateOnlineParties", {
-  //   parties: Object.keys(parties).map((key) => parties[key]),
-  // });
-
   return true;
 }
 
@@ -138,4 +160,87 @@ function generateRoomToken() {
   firstPart = ("000" + firstPart.toString(36)).slice(-3);
   secondPart = ("000" + secondPart.toString(36)).slice(-3);
   return firstPart + secondPart;
+}
+
+/**
+ * Start game if all users are ready
+ * @param {Object} party
+ */
+function lookingForStartGame(party) {
+  let ready = true;
+
+  party.users.forEach((user) => {
+    if (!user.ready) {
+      ready = false;
+    }
+  });
+
+  if (ready) {
+    startGame(party);
+  }
+}
+
+/**
+ * Start the game
+ * @param {Object} party
+ */
+function startGame(party) {
+  logger.info(`PM: starting game ${party.uuid}`);
+  party.status = "playing";
+  if (party.visibility === "public") {
+    updateAllOnlineParties();
+  }
+
+  /**
+   * Compute words
+   */
+  switch (party.mode) {
+    case "random":
+      party.words = getRandomWords();
+      break;
+    default:
+      break;
+  }
+
+  /**
+   * Sort a new letter
+   */
+  let randomLetter = ALPHA[Math.floor(Math.random() * ALPHA.length)];
+
+  while (party.lettersHistory.includes(randomLetter)) {
+    randomLetter = ALPHA[Math.floor(Math.random() * ALPHA.length)];
+  }
+
+  party.lettersHistory.push(randomLetter);
+  party.currentLetter = randomLetter;
+
+  /**
+   * Set round
+   */
+  party.currentRound = 1;
+
+  /**
+   * Set timer
+   */
+  let chrono = null;
+
+  if (party.time) {
+    party.actualTime = party.time;
+
+    chrono = setInterval(() => {
+      party.actualTime--;
+      if (party.actualTime < 0) {
+        clearInterval(chrono);
+        SocketManager.broadcastToParty(party, "stopGame");
+      } else {
+        SocketManager.broadcastToParty(party, "updateParty", {
+          party: party,
+        });
+      }
+    }, 1000);
+
+    chronoLinker[party.uuid] = chrono;
+  }
+
+  SocketManager.broadcastToParty(party, "startGame", party);
 }

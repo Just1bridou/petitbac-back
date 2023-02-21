@@ -35,6 +35,7 @@ const loginRoute = require("./routes/login.js");
 const lobbyRoutes = require("./routes/lobby.js");
 const waitingRoutes = require("./routes/waiting.js");
 const chatRoutes = require("./routes/chat.js");
+const gameRoutes = require("./routes/game.js");
 /**
  * Socket connection
  */
@@ -75,6 +76,7 @@ io.on("connection", (socket) => {
   lobbyRoutes.listen(socket);
   waitingRoutes.listen(socket);
   chatRoutes.listen(socket);
+  gameRoutes.listen(socket);
 });
 
 app.get("/sockets", (req, res) => {
