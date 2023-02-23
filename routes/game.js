@@ -62,6 +62,21 @@ function listen(socket) {
       PartyManager.sendRefreshParty(partyUUID);
     }
   );
+
+  socket.on("nextRound", ({ partyUUID, uuid }) => {
+    let party = PartyManager.get(partyUUID);
+    if (!party || party.status !== "results") return;
+
+    let user = party.users.find((u) => u.uuid === uuid);
+
+    let ready = user.ready ?? false;
+    user.ready = !ready;
+
+    // send updated party to users
+    PartyManager.sendRefreshParty(partyUUID);
+    // try to start game if all ready
+    PartyManager.nextRound(party);
+  });
 }
 
 module.exports = { listen };

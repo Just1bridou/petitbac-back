@@ -16,6 +16,7 @@ module.exports = {
   sendRefreshParty,
   lookingForStartGame,
   getChrono,
+  nextRound,
 };
 
 const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -242,5 +243,157 @@ function startGame(party) {
     chronoLinker[party.uuid] = chrono;
   }
 
+  party.users.map((user) => {
+    user.ready = false;
+  });
+
   SocketManager.broadcastToParty(party, "startGame", party);
+}
+
+function nextRound(party) {
+  let allReady = true;
+
+  party.users.forEach((user) => {
+    if (!user.ready) {
+      allReady = false;
+    }
+  });
+
+  if (!allReady) return;
+
+  if (party.currentRound < party.rounds) {
+    /**
+     * Compute score
+     */
+    party.answers.forEach((userList, userIndex) => {
+      let userScore = 0;
+
+      userList.words.forEach((word, index) => {
+        let voteLessThanFifty =
+          word.votes.filter((v) => v.vote).length < word.votes.length / 2;
+
+        if (voteLessThanFifty) return;
+
+        if (word.word[0].toLowerCase() !== party.currentLetter.toLowerCase())
+          return;
+
+        let sameWords = 1;
+
+        party.answers.forEach((userList2, userIndex2) => {
+          if (userIndex2 !== userIndex) {
+            let word2 = userList2.words[index].word;
+
+            if (word2.trim().toLowerCase() === word.word.trim().toLowerCase()) {
+              sameWords++;
+            }
+          }
+        });
+
+        if (word.word.trim() !== "") {
+          // userScore += word.length;
+          userScore += 10;
+        }
+
+        userScore = userScore / sameWords;
+      });
+
+      let scoreLine = party.score.find((s) => s.uuid === userList.uuid);
+
+      if (scoreLine) {
+        scoreLine.score += userScore;
+      } else {
+        party.score.push({
+          uuid: userList.uuid,
+          score: userScore,
+        });
+      }
+    });
+
+    /**
+     * Next round
+     */
+    party.currentRound++;
+
+    /**
+     * New letter
+     */
+    let randomLetter = ALPHA[Math.floor(Math.random() * ALPHA.length)];
+
+    while (party.lettersHistory.includes(randomLetter)) {
+      randomLetter = ALPHA[Math.floor(Math.random() * ALPHA.length)];
+    }
+
+    party.lettersHistory.push(randomLetter);
+    party.currentLetter = randomLetter;
+
+    /**
+     * Set party's status to playing (to go to game screen)
+     */
+    party.status = "playing";
+
+    /**
+     * Reset user ready
+     */
+    party.users.map((user) => {
+      user.ready = false;
+    });
+
+    /**
+     * Reset answers
+     */
+    party.answers = [];
+
+    /**
+     * Reset timer
+     */
+    let chrono = null;
+
+    if (party.time) {
+      party.actualTime = party.time;
+
+      chrono = setInterval(() => {
+        party.actualTime--;
+        if (party.actualTime < 0) {
+          clearInterval(chrono);
+          SocketManager.broadcastToParty(party, "stopGame");
+        } else {
+          SocketManager.broadcastToParty(party, "updateParty", {
+            party: party,
+          });
+        }
+      }, 1000);
+
+      chronoLinker[party.uuid] = chrono;
+    }
+
+    /**
+     * Send party event
+     */
+    SocketManager.broadcastToParty(party, "updateParty", {
+      party: party,
+    });
+  } else {
+    /**
+     * Reset party to waiting status to go to waiting room
+     */
+    party.status = "waiting";
+    /**
+     * Reset user ready
+     */
+    party.users.map((user) => {
+      user.ready = false;
+    });
+    /**
+     * Reset answers
+     */
+    party.answers = [];
+    /**
+     * Reset score
+     */
+    party.score = [];
+
+    SocketManager.broadcastToParty(party, "updateParty", {
+      party: party,
+    });
+  }
 }

@@ -26,12 +26,21 @@ let categories = [
   "YOUTUBEUR / STREAMER",
 ];
 
+function sort() {
+  return categories[Math.floor(Math.random() * categories.length)];
+}
+
 function getRandomWords() {
   let COUNT = 7;
   let words = [];
+
   for (let i = 0; i < COUNT; i++) {
-    let category = categories[Math.floor(Math.random() * categories.length)];
-    words.push(category);
+    let word = sort();
+    while (words.includes(word)) {
+      word = sort();
+    }
+    words.push(word);
   }
+
   return words;
 }
