@@ -98,5 +98,6 @@ app.get("/sockets", (req, res) => {
  * Listen server
  */
 server.listen(process.env.PORT, () => {
+  logger.info("Server version 1.0");
   logger.info(`listening on PORT : ${process.env.PORT}`);
 });
