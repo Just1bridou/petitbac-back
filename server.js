@@ -11,6 +11,8 @@ const io = new Server(server, {
       "http://localhost:3000",
       "http://91.121.75.14:3003",
       "http://91.121.75.14:3000",
+      "https://lepetitbac.online",
+      "https://www.lepetitbac.online"
     ],
     methods: ["GET", "POST"],
   },
