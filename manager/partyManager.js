@@ -124,6 +124,7 @@ function deleteUserFromParty(userUUID, partyUUID) {
     }
     delete parties[partyUUID];
 
+    logger.info(`PM: party ${partyUUID} deleted -> No users`);
     SocketManager.broadcast("updateOnlineParties", {
       parties: Object.keys(parties).map((key) => parties[key]),
     });

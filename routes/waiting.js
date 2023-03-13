@@ -95,6 +95,10 @@ function listen(socket) {
     PartyManager.sendRefreshParty(partyUUID);
     SocketManager.sendToUser(uuid, "kickParty", {});
   });
+
+  socket.on("userLeaveParty", ({ partyUUID, uuid }) => {
+    PartyManager.deleteUserFromParty(uuid, partyUUID);
+  });
 }
 
 module.exports = { listen };
