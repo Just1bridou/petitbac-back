@@ -6,8 +6,6 @@ function listen(socket) {
   socket.on("newChatMessage", ({ partyUUID, userUUID, message }) => {
     const MAX_CHAT_LENGTH = 20;
 
-    console.log(partyUUID, userUUID, message);
-
     let party = PartyManager.get(partyUUID);
     let user = UserManager.get(userUUID);
 
@@ -21,8 +19,6 @@ function listen(socket) {
     if (party.chat.length > MAX_CHAT_LENGTH) {
       party.chat.shift();
     }
-
-    console.log(party.chat);
 
     //PartyManager.sendRefreshParty(partyUUID);
     SocketManager.broadcastToParty(party, "newChatMessage", {

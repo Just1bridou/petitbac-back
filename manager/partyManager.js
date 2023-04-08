@@ -17,11 +17,17 @@ module.exports = {
   lookingForStartGame,
   getChrono,
   nextRound,
+  getAll,
 };
 
 const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let parties = [];
 let chronoLinker = [];
+
+function getAll() {
+  return parties;
+}
+
 /**
  * Life monitor
  */
@@ -35,6 +41,7 @@ function clear() {
 
 function createParty() {
   const party = {
+    createdDate: new Date(),
     uuid: generateRoomToken(),
     users: [],
     status: "waiting",

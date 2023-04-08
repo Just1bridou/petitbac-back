@@ -30,8 +30,6 @@ function listen(socket) {
       time = null;
     }
 
-    console.log(time);
-
     party.time = time;
     PartyManager.sendRefreshParty(uuid);
   });

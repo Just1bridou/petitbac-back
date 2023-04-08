@@ -12,7 +12,7 @@ const io = new Server(server, {
       "http://91.121.75.14:3003",
       "http://91.121.75.14:3000",
       "https://lepetitbac.online",
-      "https://www.lepetitbac.online"
+      "https://www.lepetitbac.online",
     ],
     methods: ["GET", "POST"],
   },
@@ -42,6 +42,23 @@ const lobbyRoutes = require("./routes/lobby.js");
 const waitingRoutes = require("./routes/waiting.js");
 const chatRoutes = require("./routes/chat.js");
 const gameRoutes = require("./routes/game.js");
+
+function deleteUser(id) {
+  let userUUID = SocketManager.disconnectUser(id);
+  let user = UserManager.get(userUUID);
+
+  // let partyUUID = lod_.cloneDeep(user?.actualPartyUUID);
+
+  if (user?.actualPartyUUID) {
+    PartyManager.deleteUserFromParty(userUUID, user.actualPartyUUID);
+  }
+
+  UserManager.deleteUser(userUUID);
+
+  if (user?.actualPartyUUID) {
+    PartyManager.sendRefreshParty(user?.actualPartyUUID);
+  }
+}
 /**
  * Socket connection
  */
@@ -54,6 +71,16 @@ io.on("connection", (socket) => {
     logger.info(`SV : Con ${socket.id} registered as ${uuid}`);
     // socket.uuid = uuid;
     SocketManager.registerConnection(uuid, socket);
+    /**
+     * Check if user already exists, if yes, he was AFK and reconnect him
+     */
+    let user = UserManager.get(uuid);
+    if (user) {
+      user.AFK = false;
+    }
+    /**
+     * Update total users
+     */
     let totalUser = UserManager.getTotalUsers();
     SocketManager.sendToUser(uuid, "updateOnlineUsers", {
       onlineUsers: totalUser,
@@ -61,21 +88,31 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnected", () => {
-    logger.info(`SV : User ${socket.id} disconnected`);
-    let userUUID = SocketManager.disconnectUser(socket.id);
+    logger.info(`SV : [DISCONNECTED] Socket ID = ${socket.id}`);
+    deleteUser(socket.id);
+  });
+
+  socket.on("disconnect", () => {
+    logger.info(
+      `SV : [DISCONNECT] Socket ID = ${socket.id}, user has 1 minute to reconnect`
+    );
+    let userUUID = SocketManager.getUUIDBySocketId(socket.id);
     let user = UserManager.get(userUUID);
 
-    // let partyUUID = lod_.cloneDeep(user?.actualPartyUUID);
+    if (!user) return;
 
-    if (user?.actualPartyUUID) {
-      PartyManager.deleteUserFromParty(userUUID, user.actualPartyUUID);
-    }
-
-    UserManager.deleteUser(userUUID);
-
-    if (user?.actualPartyUUID) {
-      PartyManager.sendRefreshParty(user?.actualPartyUUID);
-    }
+    user.AFK = true;
+    /**
+     * Wait 1 minute.
+     * If user reconnects, the socket will be updated
+     * If not, the user will be deleted
+     */
+    setTimeout(() => {
+      let refreshedUser = UserManager.get(userUUID);
+      if (refreshedUser && refreshedUser.AFK) {
+        deleteUser(socket.id);
+      }
+    }, 60000);
   });
 
   loginRoute.listen(socket);
@@ -85,15 +122,10 @@ io.on("connection", (socket) => {
   gameRoutes.listen(socket);
 });
 
-app.get("/sockets", (req, res) => {
-  let r = [];
-  SocketManager.print();
-  console.log(SocketManager.sockets);
-  for (let socket in SocketManager.sockets) {
-    r.push(socket);
-  }
-  console.log(r);
-  res.json(r);
+app.get("/parties", (req, res) => {
+  let allParties = PartyManager.getAll();
+  let parsedParties = Object.keys(allParties).map((key) => allParties[key]);
+  res.json({ count: Object.keys(allParties).length, parties: parsedParties });
 });
 
 /**

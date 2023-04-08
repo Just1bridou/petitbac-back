@@ -25,6 +25,7 @@ module.exports = {
   print,
   disconnectUser,
   broadcastToParty,
+  getUUIDBySocketId,
 };
 /**
  * Life monitor
@@ -93,6 +94,10 @@ function get(uuid) {
   } else {
     logger.error(`SM : User ${uuid} is not connected`);
   }
+}
+
+function getUUIDBySocketId(id) {
+  return socketID[id];
 }
 
 /**
