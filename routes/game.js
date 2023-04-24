@@ -69,6 +69,8 @@ function listen(socket) {
 
     let user = party.users.find((u) => u.uuid === uuid);
 
+    if (!user) return;
+
     let ready = user.ready ?? false;
     user.ready = !ready;
 

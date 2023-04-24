@@ -76,6 +76,8 @@ function listen(socket) {
 
     let user = party.users.find((u) => u.uuid === uuid);
 
+    if (!user) return;
+
     let ready = user.ready ?? false;
     user.ready = !ready;
     // send updated party to users
@@ -96,6 +98,7 @@ function listen(socket) {
 
   socket.on("userLeaveParty", ({ partyUUID, uuid }) => {
     PartyManager.deleteUserFromParty(uuid, partyUUID);
+    PartyManager.sendRefreshParty(partyUUID);
   });
 }
 

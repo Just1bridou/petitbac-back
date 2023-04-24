@@ -47,16 +47,16 @@ function deleteUser(id) {
   let userUUID = SocketManager.disconnectUser(id);
   let user = UserManager.get(userUUID);
 
-  // let partyUUID = lod_.cloneDeep(user?.actualPartyUUID);
+  let previousUUID = lod_.clone(user?.actualPartyUUID);
 
-  if (user?.actualPartyUUID) {
+  if (previousUUID) {
     PartyManager.deleteUserFromParty(userUUID, user.actualPartyUUID);
   }
 
   UserManager.deleteUser(userUUID);
 
-  if (user?.actualPartyUUID) {
-    PartyManager.sendRefreshParty(user?.actualPartyUUID);
+  if (previousUUID) {
+    PartyManager.sendRefreshParty(previousUUID);
   }
 }
 /**

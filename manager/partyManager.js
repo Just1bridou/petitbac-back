@@ -4,6 +4,7 @@ const { v4 } = require("uuid");
 
 const logger = require("../tools/logger.js");
 const { getRandomWords } = require("./database.js");
+const lod_ = require("lodash");
 
 module.exports = {
   clear,
@@ -120,8 +121,16 @@ function deleteUserFromParty(userUUID, partyUUID) {
   let party = parties[partyUUID];
   if (!party) return;
   let user = party?.users?.find((user) => user.uuid === userUUID);
+  if (!user) return;
+  let wasAdmin = lod_.clone(user.admin);
   let userIndex = party.users.indexOf(user);
   party.users.splice(userIndex, 1);
+
+  // remove user's score
+  let scoreIndex = party.score.findIndex((score) => score.uuid === userUUID);
+  if (scoreIndex !== -1) {
+    party.score.splice(scoreIndex, 1);
+  }
 
   if (party.users.length === 0) {
     let chrono = chronoLinker[partyUUID];
@@ -135,6 +144,14 @@ function deleteUserFromParty(userUUID, partyUUID) {
     SocketManager.broadcast("updateOnlineParties", {
       parties: Object.keys(parties).map((key) => parties[key]),
     });
+  } else {
+    // If admin, set new admin
+    if (wasAdmin) {
+      party.users[0].admin = true;
+      SocketManager.sendToUser(party.users[0].uuid, "refreshUser", {
+        user: party.users[0],
+      });
+    }
   }
 }
 
@@ -229,6 +246,11 @@ function startGame(party) {
   party.currentRound = 1;
 
   /**
+   * Reset score
+   */
+  party.score = [];
+
+  /**
    * Set timer
    */
   let chrono = null;
@@ -257,7 +279,11 @@ function startGame(party) {
 
   SocketManager.broadcastToParty(party, "startGame", party);
 }
-
+/**
+ * Next round
+ * @param {*} party
+ * @returns
+ */
 function nextRound(party) {
   let allReady = true;
 
@@ -269,54 +295,55 @@ function nextRound(party) {
 
   if (!allReady) return;
 
-  if (party.currentRound < party.rounds) {
-    /**
-     * Compute score
-     */
-    party.answers.forEach((userList, userIndex) => {
-      let userScore = 0;
+  /**
+   * Compute score
+   */
+  party.answers.forEach((userList, userIndex) => {
+    let userScore = 0;
 
-      userList.words.forEach((word, index) => {
-        let voteLessThanFifty =
-          word.votes.filter((v) => v.vote).length < word.votes.length / 2;
+    userList.words.forEach((word, index) => {
+      let voteLessThanFifty =
+        word.votes.filter((v) => v.vote).length < word.votes.length / 2;
 
-        if (voteLessThanFifty) return;
+      if (voteLessThanFifty) return;
 
-        if (word.word[0].toLowerCase() !== party.currentLetter.toLowerCase())
-          return;
+      if (word.word[0].toLowerCase() !== party.currentLetter.toLowerCase())
+        return;
 
-        let sameWords = 1;
+      let sameWords = 1;
 
-        party.answers.forEach((userList2, userIndex2) => {
-          if (userIndex2 !== userIndex) {
-            let word2 = userList2.words[index].word;
+      party.answers.forEach((userList2, userIndex2) => {
+        if (userIndex2 !== userIndex) {
+          let word2 = userList2.words[index].word;
 
-            if (word2.trim().toLowerCase() === word.word.trim().toLowerCase()) {
-              sameWords++;
-            }
+          if (word2.trim().toLowerCase() === word.word.trim().toLowerCase()) {
+            sameWords++;
           }
-        });
-
-        if (word.word.trim() !== "") {
-          // userScore += word.length;
-          userScore += 10;
         }
-
-        userScore = userScore / sameWords;
       });
 
-      let scoreLine = party.score.find((s) => s.uuid === userList.uuid);
-
-      if (scoreLine) {
-        scoreLine.score += userScore;
-      } else {
-        party.score.push({
-          uuid: userList.uuid,
-          score: userScore,
-        });
+      if (word.word.trim() !== "") {
+        // userScore += word.length;
+        userScore += 10;
       }
+
+      userScore = userScore / sameWords;
     });
 
+    let scoreLine = party.score.find((s) => s.uuid === userList.uuid);
+
+    if (scoreLine) {
+      scoreLine.score += userScore;
+    } else {
+      party.score.push({
+        uuid: userList.uuid,
+        score: userScore,
+      });
+    }
+  });
+
+  // There is a next round
+  if (party.currentRound < party.rounds) {
     /**
      * Next round
      */
@@ -380,6 +407,7 @@ function nextRound(party) {
     SocketManager.broadcastToParty(party, "updateParty", {
       party: party,
     });
+    // End of game
   } else {
     /**
      * Reset party to waiting status to go to waiting room
@@ -398,7 +426,15 @@ function nextRound(party) {
     /**
      * Reset score
      */
-    party.score = [];
+    // party.score = [];
+    /**
+     * See results
+     */
+    // party.canSeeTotalScore = true;
+
+    SocketManager.broadcastToParty(party, "gameIsFinish", {
+      canSeeTotalScore: true,
+    });
 
     SocketManager.broadcastToParty(party, "updateParty", {
       party: party,

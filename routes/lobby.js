@@ -8,6 +8,7 @@ function listen(socket) {
      * Update userR
      */
     let user = UserManager.get(uuid);
+    if (!user) return;
     user.admin = true;
     SocketManager.sendToUser(uuid, "refreshUser", { user });
     /**
