@@ -60,6 +60,19 @@ function deleteUser(id) {
   }
 }
 /**
+ * catch errors
+ */
+process.on("uncaughtException", function (err) {
+  logger.error("Caught exception: " + err);
+
+  const fs = require("fs");
+  const errorLog = fs.createWriteStream("error.log", { flags: "a" });
+  let strBase = `Le ${new Date().toLocaleDateString(
+    "fr"
+  )} à ${new Date().toLocaleTimeString("fr")} : `;
+  errorLog.write(`${strBase} Caught exception: ${err}\n`);
+});
+/**
  * Socket connection
  */
 io.on("connection", (socket) => {
