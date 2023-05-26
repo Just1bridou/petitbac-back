@@ -35,6 +35,14 @@ UserManager.clear();
 PartyManager.clear();
 
 /**
+ * export
+ */
+module.exports = {
+  getPartiesCount,
+  getUsersCount,
+};
+
+/**
  * Routes
  */
 const loginRoute = require("./routes/login.js");
@@ -42,6 +50,7 @@ const lobbyRoutes = require("./routes/lobby.js");
 const waitingRoutes = require("./routes/waiting.js");
 const chatRoutes = require("./routes/chat.js");
 const gameRoutes = require("./routes/game.js");
+const { init } = require("./manager/discordBot.js");
 
 function deleteUser(id) {
   let userUUID = SocketManager.disconnectUser(id);
@@ -72,6 +81,10 @@ process.on("uncaughtException", function (err) {
   )} à ${new Date().toLocaleTimeString("fr")} : `;
   errorLog.write(`${strBase} Caught exception: ${err}\n`);
 });
+/**
+ * Discord
+ */
+init();
 /**
  * Socket connection
  */
@@ -148,3 +161,14 @@ server.listen(process.env.PORT, () => {
   logger.info("Server version 1.0");
   logger.info(`listening on PORT : ${process.env.PORT}`);
 });
+
+function getPartiesCount() {
+  let allParties = PartyManager.getAll();
+  let count = Object.keys(allParties).length;
+  return count;
+}
+
+function getUsersCount() {
+  let all = UserManager.getTotalUsers();
+  return all;
+}
