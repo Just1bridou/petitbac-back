@@ -32,9 +32,9 @@ function getAll() {
 /**
  * Life monitor
  */
-setInterval(() => {
+/*setInterval(() => {
   logger.warn(`PM : Actually party count: ${Object.keys(parties).length}`);
-}, 10000);
+}, 10000);*/
 
 function clear() {
   parties = [];

@@ -14,9 +14,9 @@ let users = [];
 /**
  * Life monitor
  */
-setInterval(() => {
+/*setInterval(() => {
   logger.warn(`UM : Actually connected users: ${Object.keys(users).length}`);
-}, 10000);
+}, 10000);*/
 
 function clear() {
   users = [];
