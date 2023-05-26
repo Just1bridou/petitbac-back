@@ -30,11 +30,11 @@ module.exports = {
 /**
  * Life monitor
  */
-setInterval(() => {
-  logger.warn(
-    `SM : Actually established connections: ${Object.keys(sockets).length}`
-  );
-}, 10000);
+// setInterval(() => {
+//   logger.warn(
+//     `SM : Actually established connections: ${Object.keys(sockets).length}`
+//   );
+// }, 10000);
 
 function print() {
   console.log("SM : broadcast to", Object.keys(sockets).length);
