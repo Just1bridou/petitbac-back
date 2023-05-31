@@ -307,7 +307,7 @@ function nextRound(party) {
 
       if (voteLessThanFifty) return;
 
-      if (!word?.word || party?.currentLetter) return;
+      if (!word?.word || !party?.currentLetter) return;
       if (word.word[0].toLowerCase() !== party.currentLetter.toLowerCase())
         return;
 
