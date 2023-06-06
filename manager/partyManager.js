@@ -307,6 +307,7 @@ function nextRound(party) {
 
       if (voteLessThanFifty) return;
 
+      if (!word?.word || !party?.currentLetter) return;
       if (word.word[0].toLowerCase() !== party.currentLetter.toLowerCase())
         return;
 
@@ -316,6 +317,7 @@ function nextRound(party) {
         if (userIndex2 !== userIndex) {
           let word2 = userList2.words[index].word;
 
+          if (!word2 || !word?.word) return;
           if (word2.trim().toLowerCase() === word.word.trim().toLowerCase()) {
             sameWords++;
           }

@@ -34,6 +34,14 @@ const UserManager = require("./manager/userManager.js");
 const PartyManager = require("./manager/partyManager.js");
 const { connect, getFlashConfig } = require("./manager/database.js");
 /**
+ * export
+ */
+module.exports = {
+  getPartiesCount,
+  getUsersCount,
+};
+
+/**
  * Routes
  */
 const loginRoute = require("./routes/login.js");
@@ -44,6 +52,7 @@ const gameRoutes = require("./routes/game.js");
 // Games
 const flashRoutes = require("./routes/flash.js");
 const { HunspellReader } = require("hunspell-reader");
+const DiscordManager = require("./manager/discordBot.js");
 
 logger.info("Starting server...");
 
@@ -174,4 +183,108 @@ function deleteUser(id) {
   if (previousUUID) {
     PartyManager.sendRefreshParty(previousUUID);
   }
+}
+/**
+ * catch errors
+ */
+process.on("uncaughtException", function (err) {
+  logger.error("Caught exception: " + err);
+
+  const fs = require("fs");
+  const errorLog = fs.createWriteStream("error.log", { flags: "a" });
+  let strBase = `Le ${new Date().toLocaleDateString(
+    "fr"
+  )} à ${new Date().toLocaleTimeString("fr")} : `;
+  errorLog.write(`${strBase} Caught exception: ${err}\n`);
+});
+/**
+ * Discord
+ */
+DiscordManager.init();
+/**
+ * Socket connection
+ */
+io.on("connection", (socket) => {
+  logger.info("SV : New user connected");
+  /**
+   * Save user's socket when connection is established
+   */
+  socket.on("saveUser", ({ uuid }) => {
+    logger.info(`SV : Con ${socket.id} registered as ${uuid}`);
+    // socket.uuid = uuid;
+    SocketManager.registerConnection(uuid, socket);
+    /**
+     * Check if user already exists, if yes, he was AFK and reconnect him
+     */
+    let user = UserManager.get(uuid);
+    if (user) {
+      user.AFK = false;
+    }
+    /**
+     * Update total users
+     */
+    let totalUser = UserManager.getTotalUsers();
+    SocketManager.sendToUser(uuid, "updateOnlineUsers", {
+      onlineUsers: totalUser,
+    });
+  });
+
+  socket.on("disconnected", () => {
+    logger.info(`SV : [DISCONNECTED] Socket ID = ${socket.id}`);
+    deleteUser(socket.id);
+  });
+
+  socket.on("disconnect", () => {
+    logger.info(
+      `SV : [DISCONNECT] Socket ID = ${socket.id}, user has 1 minute to reconnect`
+    );
+    let userUUID = SocketManager.getUUIDBySocketId(socket.id);
+    let user = UserManager.get(userUUID);
+
+    if (!user) return;
+
+    user.AFK = true;
+    /**
+     * Wait 1 minute.
+     * If user reconnects, the socket will be updated
+     * If not, the user will be deleted
+     */
+    setTimeout(() => {
+      let refreshedUser = UserManager.get(userUUID);
+      if (refreshedUser && refreshedUser.AFK) {
+        deleteUser(socket.id);
+      }
+    }, 60000);
+  });
+
+  loginRoute.listen(socket);
+  lobbyRoutes.listen(socket);
+  waitingRoutes.listen(socket);
+  chatRoutes.listen(socket);
+  gameRoutes.listen(socket);
+});
+
+app.get("/parties", (req, res) => {
+  let allParties = PartyManager.getAll();
+  let parsedParties = Object.keys(allParties).map((key) => allParties[key]);
+  res.json({ count: Object.keys(allParties).length, parties: parsedParties });
+});
+
+/**
+ * Listen server
+ */
+server.listen(process.env.PORT, () => {
+  logger.info("Server version 1.0");
+  logger.info(`listening on PORT : ${process.env.PORT}`);
+});
+
+function getPartiesCount() {
+  let allParties = PartyManager.getAll();
+  let count = Object.keys(allParties).length;
+  return count;
+}
+
+function getUsersCount() {
+  let all = UserManager.getTotalUsers();
+  return all;
 }

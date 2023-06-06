@@ -11,7 +11,7 @@ const {
 function listen(socket) {
   socket.on("getThemesList", async (cb) => {
     // 1- Look if you have a flash config for today
-    let todayThemes = null; //await getTodayFlashConfig();
+    let todayThemes = await getTodayFlashConfig();
     if (todayThemes) {
       cb(todayThemes);
       return;
