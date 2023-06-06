@@ -51,6 +51,10 @@ async function sendErrorMessage(message) {
 }
 
 async function init() {
+  if (!process.env.TOKEN) {
+    console.log("No token found, discord bot not started.");
+    return;
+  }
   await apiCommands();
   client = new Client({
     intents: [
