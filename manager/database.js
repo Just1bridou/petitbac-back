@@ -11,6 +11,11 @@ module.exports = {
   verifyWordInBase,
   getTodayFlashConfig,
   recordTodayFlashConfig,
+  saveErrorWord,
+  isUserAllowed,
+  getAllErrors,
+  updateError,
+  deleteError,
 };
 
 async function connect() {
@@ -177,4 +182,79 @@ async function verifyWordInBase(theme, letter, word) {
       };
     }
   } catch (e) {}
+}
+/**
+ * Save error word in database
+ */
+async function saveErrorWord(theme, letter, word) {
+  try {
+    let exist = await db.collection("errorWord").findOne({
+      theme: theme,
+      letter: letter,
+      word: word,
+    });
+
+    if (exist) {
+      return;
+    }
+
+    await db.collection("errorWord").insertOne({
+      createdDate: new Date(),
+      theme: theme,
+      letter: letter,
+      word: word,
+    });
+
+    logger.warn(
+      `Error reported for word ${word} in theme ${theme} and letter ${letter}`
+    );
+  } catch (e) {
+    logger.error("Error while saving error word :", e);
+  }
+}
+
+async function getAllErrors() {
+  try {
+    let errors = await db.collection("errorWord").find().toArray();
+    return errors;
+  } catch (e) {
+    logger.error("Error while getting all errors :", e);
+    return [];
+  }
+}
+
+async function isUserAllowed(email) {
+  let user = await db.collection("users").findOne({
+    email: email,
+  });
+
+  if (!user) {
+    return false;
+  }
+
+  return true;
+}
+
+async function updateError(theme, letter, word) {
+  try {
+    await db
+      .collection("theme")
+      .updateOne({ name: theme }, { $push: { [`words.${letter}`]: word } });
+
+    await deleteError(theme, letter, word);
+  } catch (e) {
+    logger.error("Error while updating error :", e);
+  }
+}
+
+async function deleteError(theme, letter, word) {
+  try {
+    await db.collection("errorWord").deleteOne({
+      theme: theme,
+      letter: letter,
+      word: word,
+    });
+  } catch (e) {
+    logger.error("Error while deleting error :", e);
+  }
 }

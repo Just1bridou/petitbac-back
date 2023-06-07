@@ -1,11 +1,14 @@
 const SocketManager = require("../manager/socketManager.js");
 const UserManager = require("../manager/userManager.js");
 const PartyManager = require("../manager/partyManager.js");
+const logger = require("../tools/logger.js");
+
 const {
   verifyWordInBase,
   getFlashConfig,
   getTodayFlashConfig,
   recordTodayFlashConfig,
+  saveErrorWord,
 } = require("../manager/database.js");
 
 function listen(socket) {
@@ -25,6 +28,10 @@ function listen(socket) {
   socket.on("verifyGame", async ({ theme, letter, word }, cb) => {
     let exist = await verifyWordInBase(theme, letter, word);
     cb(exist);
+  });
+
+  socket.on("reportError", async ({ theme, letter, word }) => {
+    await saveErrorWord(theme, letter, word);
   });
 }
 

@@ -22,23 +22,10 @@ module.exports = {
   broadcast,
   get,
   sendToList,
-  print,
   disconnectUser,
   broadcastToParty,
   getUUIDBySocketId,
 };
-/**
- * Life monitor
- */
-/*setInterval(() => {
-  logger.warn(
-    `SM : Actually established connections: ${Object.keys(sockets).length}`
-  );
-}, 10000);*/
-
-function print() {
-  console.log("SM : broadcast to", Object.keys(sockets).length);
-}
 
 function clear() {
   sockets = [];
@@ -65,14 +52,14 @@ function sendToUser(uuid, event, data) {
 }
 
 function broadcast(event, data) {
-  logger.info(`SM : broadcast '${event}' to ${Object.keys(sockets).length}`);
+  // logger.info(`SM : broadcast '${event}' to ${Object.keys(sockets).length}`);
   for (let socket in sockets) {
     sockets[socket].emit(event, data);
   }
 }
 
 function broadcastToParty(party, event, data) {
-  logger.info(`SM : broadcast party '${event}' to ${party.users.length}`);
+  // logger.info(`SM : broadcast party '${event}' to ${party.users.length}`);
   for (let user of party.users) {
     // console.log(
     //   `send user ${user.uuid} ${event} with sID ${sockets[user.uuid]?.id}`

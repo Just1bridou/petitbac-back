@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, REST, Routes } = require("discord.js");
-const { getPartiesCount, getUsersCount } = require("../server");
+// const { getPartiesCount, getUsersCount } = require("../server");
 
 let client = null;
 
@@ -83,12 +83,12 @@ async function init() {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === "parties") {
-      let count = getPartiesCount();
+      let count = 0; // getPartiesCount();
       await interaction.reply(`${count} parties.`);
     }
 
     if (interaction.commandName === "users") {
-      let count = getUsersCount();
+      let count = 0; // getUsersCount();
       await interaction.reply(`${count} users.`);
     }
   });

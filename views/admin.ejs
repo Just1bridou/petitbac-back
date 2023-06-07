@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="style/style.css" />
+    <script
+      src="https://kit.fontawesome.com/6f62021544.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <nav>
+      <span class="siteTitle"> Administration </span>
+      <div class="actions">
+        <span class="username"><%= user.displayName %></span>
+        <span>
+          <i class="fa-solid fa-power-off iconButton" id="logout"></i>
+        </span>
+      </div>
+    </nav>
+
+    <table id="errorList">
+      <tr>
+        <th>Date</th>
+        <th>Theme</th>
+        <th>Letter</th>
+        <th>Word</th>
+        <th>Actions</th>
+      </tr>
+    </table>
+  </body>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("logout").addEventListener("click", () => {
+        window.location.href = "/logout";
+      });
+
+      var token = "<%= user.accessToken %>";
+      fetch("/getAllErrors", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then((errors) => {
+          const userListDiv = document.getElementById("errorList");
+
+          errors.map((error) => {
+            let tr = document.createElement("tr");
+            let tdDate = document.createElement("td");
+            let tdTheme = document.createElement("td");
+            let tdLetter = document.createElement("td");
+            let tdWord = document.createElement("td");
+            let tdActions = document.createElement("td");
+
+            let tdarow = document.createElement("div");
+
+            let act1 = document.createElement("div");
+            let act2 = document.createElement("div");
+
+            let checkAction = document.createElement("i");
+            let deleteAction = document.createElement("i");
+
+            checkAction.addEventListener("click", () => {
+              fetch("/editError", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  theme: error.theme,
+                  letter: error.letter,
+                  word: error.word,
+                }),
+              })
+                .then((response) => {
+                  return response.json();
+                })
+                .then((result) => {
+                  tr.remove();
+                })
+                .catch((error) => console.error("Error:", error));
+            });
+
+            deleteAction.addEventListener("click", () => {
+              fetch("/deleteError", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  theme: error.theme,
+                  letter: error.letter,
+                  word: error.word,
+                }),
+              })
+                .then((response) => {
+                  return response.json();
+                })
+                .then((result) => {
+                  tr.remove();
+                })
+                .catch((error) => console.error("Error:", error));
+            });
+
+            checkAction.classList.add(
+              "fa-solid",
+              "fa-check",
+              "iconButtonCheck"
+            );
+            deleteAction.classList.add("fa-solid", "fa-trash", "iconButton");
+
+            act1.appendChild(checkAction);
+            act2.appendChild(deleteAction);
+
+            tdarow.appendChild(act1);
+            tdarow.appendChild(act2);
+
+            tdarow.classList.add("actions");
+
+            tdActions.appendChild(tdarow);
+
+            tr.classList.add("row");
+
+            tdDate.textContent = new Date(error.createdDate).toLocaleString();
+            tdTheme.textContent = error.theme;
+            tdLetter.textContent = error.letter;
+            tdWord.textContent = error.word;
+
+            tr.appendChild(tdDate);
+            tr.appendChild(tdTheme);
+            tr.appendChild(tdLetter);
+            tr.appendChild(tdWord);
+            tr.appendChild(tdActions);
+
+            userListDiv.appendChild(tr);
+          });
+        })
+        .catch((error) => console.error("Error:", error));
+    });
+  </script>
+</html>
