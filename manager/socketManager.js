@@ -42,7 +42,7 @@ function registerConnection(uuid, socket) {
 }
 
 function sendToUser(uuid, event, data) {
-  logger.info(`SM : send to ${uuid} '${event}' with sID ${sockets[uuid]?.id}`);
+  //  logger.info(`SM : send to ${uuid} '${event}' with sID ${sockets[uuid]?.id}`);
 
   if (sockets[uuid] !== undefined) {
     sockets[uuid].emit(event, data);
@@ -94,8 +94,8 @@ function getUUIDBySocketId(id) {
 function disconnectUser(id) {
   let uuid = lod_.cloneDeep(socketID[id]);
 
-  console.log(`SM : User ${uuid} disconnected from socket`);
   if (uuid) {
+    console.log(`SM : User ${uuid} disconnected from socket`);
     delete sockets[uuid];
   }
 

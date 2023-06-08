@@ -30,6 +30,7 @@ const io = new Server(server, {
     ],
     methods: ["GET", "POST"],
   },
+  maxHttpBufferSize: 1e10,
 });
 /**
  * Managers
@@ -116,12 +117,16 @@ async function init() {
    * Socket connection
    */
   io.on("connection", (socket) => {
-    logger.info("SV : New user connected");
+    // logger.info("SV : New user connected");
+    socket.on("error", (err) => {
+      logger.error(`SOCKET error due to ${err.message}`);
+    });
+
     /**
      * Save user's socket when connection is established
      */
     socket.on("saveUser", ({ uuid }) => {
-      logger.info(`SV : Con ${socket.id} registered as ${uuid}`);
+      // logger.info(`SV : Con ${socket.id} registered as ${uuid}`);
       // socket.uuid = uuid;
       SocketManager.registerConnection(uuid, socket);
       /**
@@ -141,7 +146,9 @@ async function init() {
     });
 
     socket.on("disconnected", () => {
-      logger.info(`SV : [DISCONNECTED] Socket ID = ${socket.id}`);
+      logger.info(
+        `SV : [DISCONNECTED] Socket ID = ${socket.id} (user force disconnect)`
+      );
       deleteUser(socket.id);
     });
 
