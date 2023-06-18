@@ -160,17 +160,79 @@ async function getFlashConfig() {
   }
 }
 
+function removeAccents(word) {
+  const accents = [
+    /[\300-\306]/g,
+    /[\340-\346]/g, // A, a
+    /[\310-\313]/g,
+    /[\350-\353]/g, // E, e
+    /[\314-\317]/g,
+    /[\354-\357]/g, // I, i
+    /[\322-\330]/g,
+    /[\362-\370]/g, // O, o
+    /[\331-\334]/g,
+    /[\371-\374]/g, // U, u
+    /[\321]/g,
+    /[\361]/g, // N, n
+    /[\307]/g,
+    /[\347]/g, // C, c
+  ];
+
+  const withoutAccents = [
+    "A",
+    "a",
+    "E",
+    "e",
+    "I",
+    "i",
+    "O",
+    "o",
+    "U",
+    "u",
+    "N",
+    "n",
+    "C",
+    "c",
+  ];
+
+  for (let i = 0; i < accents.length; i++) {
+    word = word.replace(accents[i], withoutAccents[i]);
+  }
+
+  return word;
+}
+
+function isWordInList(word, list) {
+  for (let listWord of list) {
+    if (
+      removeAccents(word.toLowerCase()) ===
+      removeAccents(listWord.toLowerCase())
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function verifyWordInBase(theme, letter, word) {
   try {
-    let find = await db.collection("theme").findOne(
-      { name: theme, [`words.${letter}`]: { $in: [word.toLowerCase()] } },
-      {
-        projection: {
-          _id: 1,
-        },
-      }
-    );
-    if (!find) {
+    let letterWords = await db
+      .collection("theme")
+      .find(
+        { name: theme },
+        {
+          projection: {
+            [`words.${letter}`]: 1,
+          },
+        }
+      )
+      .toArray();
+
+    letterWords = letterWords[0].words[letter];
+
+    let inList = isWordInList(word, letterWords);
+
+    if (!inList) {
       return {
         finded: false,
         score: 0,
