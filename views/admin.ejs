@@ -19,15 +19,48 @@
       </div>
     </nav>
 
-    <table id="errorList">
-      <tr>
-        <th>Date</th>
-        <th>Theme</th>
-        <th>Letter</th>
-        <th>Word</th>
-        <th>Actions</th>
-      </tr>
-    </table>
+    <div class="accordion">
+      <details>
+        <summary>
+          Parties online
+          <span id="partiesCount">(<%= onlineParties.count %>)</span>
+        </summary>
+        <table id="partiesTable">
+          <tr>
+            <th>Date</th>
+            <th>Code</th>
+            <th>Language</th>
+            <th>Visibility</th>
+            <th>Users</th>
+            <th>Actions</th>
+          </tr>
+          <% onlineParties.parties.map((party) => { %>
+          <tr>
+            <td><%= new Date(party.createdDate).toLocaleString("FR-fr") %></td>
+            <td><%= party.uuid %></td>
+            <td><%= party.language %></td>
+            <td><%= party.visibility %></td>
+            <td><%= Object.keys(party.users).length %></td>
+            <td>
+              <i class="fa-solid fa-trash iconButton"></i>
+            </td>
+          </tr>
+          <% }) %>
+        </table>
+      </details>
+      <details>
+        <summary>Reports list</summary>
+        <table id="errorList">
+          <tr>
+            <th>Date</th>
+            <th>Theme</th>
+            <th>Letter</th>
+            <th>Word</th>
+            <th>Actions</th>
+          </tr>
+        </table>
+      </details>
+    </div>
   </body>
 
   <script>

@@ -87,3 +87,22 @@ table {
 .actions i {
   padding: 10px;
 }
+
+.accordion {
+  user-select: none;
+}
+
+.accordion details {
+  margin: 10px;
+  border: 2px solid black;
+}
+
+.accordion summary {
+  padding: 20px;
+  background-color: rgb(198, 198, 198);
+  cursor: pointer;
+}
+
+.accordion summary:hover {
+  filter: brightness(0.7);
+}

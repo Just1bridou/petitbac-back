@@ -230,7 +230,7 @@ app.use(passport.session());
 
 app.set("view engine", "ejs");
 
-app.get("/parties", (req, res) => {
+app.get("/parties", checkJwt, (req, res) => {
   let allParties = PartyManager.getAll();
   let parsedParties = Object.keys(allParties).map((key) => allParties[key]);
   res.json({ count: Object.keys(allParties).length, parties: parsedParties });
@@ -304,7 +304,13 @@ app.get("/logout", function (req, res) {
 
 // Admin route
 app.get("/admin", ensureAuthenticated, function (req, res) {
-  res.render("admin", { user: req.user });
+  let allParties = PartyManager.getAll();
+  let parsedParties = Object.keys(allParties).map((key) => allParties[key]);
+  let onlineParties = {
+    count: Object.keys(allParties).length,
+    parties: parsedParties,
+  };
+  res.render("admin", { user: req.user, onlineParties });
 });
 
 // Function to ensure the user is authenticated

@@ -53,26 +53,33 @@ function sendToUser(uuid, event, data) {
 
 function broadcast(event, data) {
   // logger.info(`SM : broadcast '${event}' to ${Object.keys(sockets).length}`);
-  for (let socket in sockets) {
-    sockets[socket].emit(event, data);
-  }
+  sockets.map((socket) => {
+    let sender = sockets[socket];
+    if (sender) {
+      sender.emit(event, data);
+    }
+  });
 }
 
 function broadcastToParty(party, event, data) {
-  // logger.info(`SM : broadcast party '${event}' to ${party.users.length}`);
-  for (let user of party.users) {
-    // console.log(
-    //   `send user ${user.uuid} ${event} with sID ${sockets[user.uuid]?.id}`
-    // );
+  if (!party) return;
+
+  party.users.map((user) => {
     if (!sockets[user.uuid]) return;
-    sockets[user.uuid].emit(event, data);
-  }
+    let sender = sockets[user.uuid];
+    if (sender) {
+      sender.emit(event, data);
+    }
+  });
 }
 
 function sendToList(list, event, data) {
-  for (let socket in list) {
-    sockets[socket].emit(event, data);
-  }
+  list.map((socket) => {
+    let sender = sockets[socket];
+    if (sender) {
+      sender.emit(event, data);
+    }
+  });
 }
 
 function get(uuid) {
