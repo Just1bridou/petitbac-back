@@ -24,42 +24,32 @@ async function connect() {
   logger.info("Connected to database");
 }
 
-let categories = [
-  "PRÉNOM",
-  "FRUIT / FLEUR / LEGUME",
-  "MÉTIER",
-  "CÉLEBRITÉ (nom de famille)",
-  "MARQUE",
-  "ANIMAL",
-  "PAYS",
-  "VILLE",
-  "PERSONNAGE DE FICTION",
-  "TITRE DE MUSIQUE",
-  "SPORT",
-  "PLAT",
-  "BOISSON",
-  "FILM / SÉRIE",
-  "VETEMENT",
-  "FROMAGE",
-  "ANATOMIE DU CORPS",
-  "OBJET",
-  "DEPARTEMENT FRANCAIS",
-  "VERBE",
-  "YOUTUBEUR / STREAMER",
-];
-
-function sort() {
-  return categories[Math.floor(Math.random() * categories.length)];
+function sort(list) {
+  return list[Math.floor(Math.random() * list.length)];
 }
 
-function getRandomWords() {
+async function getRandomWords() {
   let COUNT = 7;
   let words = [];
 
+  let THEMES_LIST = await db.collection("config").findOne(
+    {
+      configType: "gameMode",
+      type: "main",
+    },
+    {
+      projection: {
+        themes: 1,
+      },
+    }
+  );
+
+  THEMES_LIST = THEMES_LIST.themes;
+
   for (let i = 0; i < COUNT; i++) {
-    let word = sort();
+    let word = sort(THEMES_LIST);
     while (words.includes(word)) {
-      word = sort();
+      word = sort(THEMES_LIST);
     }
     words.push(word);
   }
@@ -223,14 +213,39 @@ async function verifyWordInBase(theme, letter, word) {
         {
           projection: {
             [`words.${letter}`]: 1,
+            collection: 1,
+            name: 1,
           },
         }
       )
       .toArray();
 
-    letterWords = letterWords[0].words[letter];
+    let inList = false;
 
-    let inList = isWordInList(word, letterWords);
+    if (letterWords[0].collection) {
+      letterWords = letterWords[0];
+      /**
+       * Need to find words in specific collection
+       */
+      let collection = letterWords.collection;
+      let name = letterWords.name;
+
+      let regex = new RegExp(`^${word}$`, "igm");
+
+      let exist = await db.collection(collection).findOne({
+        ref: name,
+        name: regex,
+      });
+
+      inList = Boolean(exist);
+    } else {
+      /**
+       * Words are in the theme object
+       */
+      letterWords = letterWords[0].words[letter];
+
+      inList = isWordInList(word, letterWords);
+    }
 
     if (!inList) {
       return {

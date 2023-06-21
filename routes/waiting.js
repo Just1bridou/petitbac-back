@@ -70,7 +70,7 @@ function listen(socket) {
     PartyManager.updateAllOnlineParties();
   });
 
-  socket.on("readyUser", ({ partyUUID, uuid }) => {
+  socket.on("readyUser", async ({ partyUUID, uuid }) => {
     let party = PartyManager.get(partyUUID);
     if (!party || party.status !== "waiting") return;
 
@@ -83,7 +83,7 @@ function listen(socket) {
     // send updated party to users
     PartyManager.sendRefreshParty(partyUUID);
     // try to start game if all ready
-    PartyManager.lookingForStartGame(party);
+    await PartyManager.lookingForStartGame(party);
   });
 
   socket.on("kickUser", ({ partyUUID, uuid }) => {

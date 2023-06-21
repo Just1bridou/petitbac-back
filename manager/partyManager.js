@@ -192,7 +192,7 @@ function generateRoomToken() {
  * Start game if all users are ready
  * @param {Object} party
  */
-function lookingForStartGame(party) {
+async function lookingForStartGame(party) {
   let ready = true;
 
   party.users.forEach((user) => {
@@ -202,7 +202,7 @@ function lookingForStartGame(party) {
   });
 
   if (ready) {
-    startGame(party);
+    await startGame(party);
   }
 }
 
@@ -210,7 +210,7 @@ function lookingForStartGame(party) {
  * Start the game
  * @param {Object} party
  */
-function startGame(party) {
+async function startGame(party) {
   logger.info(`PM: starting game ${party.uuid}`);
   party.status = "playing";
   if (party.visibility === "public") {
@@ -222,7 +222,7 @@ function startGame(party) {
    */
   switch (party.mode) {
     case "random":
-      party.words = getRandomWords();
+      party.words = await getRandomWords();
       break;
     default:
       break;
