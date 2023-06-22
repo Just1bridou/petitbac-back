@@ -3,7 +3,7 @@ const UserManager = require("../manager/userManager.js");
 const PartyManager = require("../manager/partyManager.js");
 
 function listen(socket) {
-  socket.on("stopGame", ({ uuid }) => {
+  socket.on("stopGame", ({ uuid }, callback) => {
     let party = PartyManager.get(uuid);
 
     if (!party) return;
@@ -17,7 +17,7 @@ function listen(socket) {
     PartyManager.sendRefreshParty(uuid);
   });
 
-  socket.on("savePartyWords", ({ uuid, partyUUID, words }) => {
+  socket.on("savePartyWords", ({ uuid, partyUUID, words }, callback) => {
     let party = PartyManager.get(partyUUID);
     if (!party) return;
 
@@ -49,7 +49,7 @@ function listen(socket) {
 
   socket.on(
     "changeVote",
-    ({ uuid, answerUUID, partyUUID, vote, wordIndex }) => {
+    ({ uuid, answerUUID, partyUUID, vote, wordIndex }, callback) => {
       let party = PartyManager.get(partyUUID);
       if (!party) return;
 
@@ -63,7 +63,7 @@ function listen(socket) {
     }
   );
 
-  socket.on("nextRound", ({ partyUUID, uuid }) => {
+  socket.on("nextRound", ({ partyUUID, uuid }, callback) => {
     let party = PartyManager.get(partyUUID);
     if (!party || party.status !== "results") return;
 

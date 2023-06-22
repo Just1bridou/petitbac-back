@@ -30,7 +30,7 @@ function listen(socket) {
     cb(exist);
   });
 
-  socket.on("reportError", async ({ theme, letter, word }) => {
+  socket.on("reportError", async ({ theme, letter, word }, callback) => {
     await saveErrorWord(theme, letter, word);
   });
 }

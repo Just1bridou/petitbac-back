@@ -45,7 +45,9 @@ function sendToUser(uuid, event, data) {
   //  logger.info(`SM : send to ${uuid} '${event}' with sID ${sockets[uuid]?.id}`);
 
   if (sockets[uuid] !== undefined) {
-    sockets[uuid].emit(event, data);
+    sockets[uuid].timeout(5000).emit(event, data, (err, response) => {
+      logger.error(`Socket ERROR : sendToUser error is : ${err}`);
+    });
   } else {
     logger.error(`SM : User ${uuid} is not connected`);
   }
@@ -56,7 +58,9 @@ function broadcast(event, data) {
   sockets.map((socket) => {
     let sender = sockets[socket];
     if (sender) {
-      sender.emit(event, data);
+      sender.timeout(5000).emit(event, data, (err, response) => {
+        logger.error(`Socket ERROR : sendToUser error is : ${err}`);
+      });
     }
   });
 }
@@ -68,7 +72,9 @@ function broadcastToParty(party, event, data) {
     if (!sockets[user.uuid]) return;
     let sender = sockets[user.uuid];
     if (sender) {
-      sender.emit(event, data);
+      sender.timeout(5000).emit(event, data, (err, response) => {
+        logger.error(`Socket ERROR : sendToUser error is : ${err}`);
+      });
     }
   });
 }
@@ -77,7 +83,9 @@ function sendToList(list, event, data) {
   list.map((socket) => {
     let sender = sockets[socket];
     if (sender) {
-      sender.emit(event, data);
+      sender.timeout(5000).emit(event, data, (err, response) => {
+        logger.error(`Socket ERROR : sendToUser error is : ${err}`);
+      });
     }
   });
 }
