@@ -3,7 +3,7 @@ const UserManager = require("../manager/userManager.js");
 const PartyManager = require("../manager/partyManager.js");
 
 function listen(socket) {
-  socket.on("newChatMessage", ({ partyUUID, userUUID, message }, callback) => {
+  socket.on("newChatMessage", ({ partyUUID, userUUID, message }) => {
     const MAX_CHAT_LENGTH = 20;
 
     let party = PartyManager.get(partyUUID);
