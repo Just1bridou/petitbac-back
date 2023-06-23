@@ -125,7 +125,10 @@ async function init() {
     /**
      * Save user's socket when connection is established
      */
-    socket.on("saveUser", ({ uuid }) => {
+    socket.on("saveUser", ({ uuid }, callback) => {
+      if (callback) {
+        callback({ status: 200 });
+      }
       // logger.info(`SV : Con ${socket.id} registered as ${uuid}`);
       // socket.uuid = uuid;
       SocketManager.registerConnection(uuid, socket);
@@ -145,7 +148,11 @@ async function init() {
       });
     });
 
-    socket.on("disconnected", () => {
+    socket.on("disconnected", (data, callback) => {
+      if (callback) {
+        callback({ status: 200 });
+      }
+
       logger.info(
         `SV : [DISCONNECTED] Socket ID = ${socket.id} (user force disconnect)`
       );

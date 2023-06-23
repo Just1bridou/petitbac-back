@@ -3,7 +3,11 @@ const UserManager = require("../manager/userManager.js");
 const PartyManager = require("../manager/partyManager.js");
 
 function listen(socket) {
-  socket.on("changePartyVisibility", ({ uuid, isPublic }) => {
+  socket.on("changePartyVisibility", ({ uuid, isPublic }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(uuid);
     if (!party) return;
     party.visibility = isPublic ? "public" : "private";
@@ -11,14 +15,22 @@ function listen(socket) {
     PartyManager.updateAllOnlineParties();
   });
 
-  socket.on("changePartyMode", ({ uuid, mode }) => {
+  socket.on("changePartyMode", ({ uuid, mode }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(uuid);
     if (!party) return;
     party.mode = mode;
     PartyManager.sendRefreshParty(uuid);
   });
 
-  socket.on("changePartyTime", ({ uuid, time }) => {
+  socket.on("changePartyTime", ({ uuid, time }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(uuid);
     if (!party) return;
 
@@ -34,14 +46,22 @@ function listen(socket) {
     PartyManager.sendRefreshParty(uuid);
   });
 
-  socket.on("changePartyRounds", ({ uuid, rounds }) => {
+  socket.on("changePartyRounds", ({ uuid, rounds }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(uuid);
     if (!party) return;
     party.rounds = rounds;
     PartyManager.sendRefreshParty(uuid);
   });
 
-  socket.on("changePartyLanguage", ({ uuid, language }) => {
+  socket.on("changePartyLanguage", ({ uuid, language }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(uuid);
     if (!party) return;
     party.language = language;
@@ -49,7 +69,11 @@ function listen(socket) {
     PartyManager.updateAllOnlineParties();
   });
 
-  socket.on("addPartyWord", ({ uuid, newWord }) => {
+  socket.on("addPartyWord", ({ uuid, newWord }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(uuid);
     if (!party) return;
     if (party.words.includes(newWord)) return;
@@ -60,7 +84,11 @@ function listen(socket) {
     PartyManager.updateAllOnlineParties();
   });
 
-  socket.on("removePartyWord", ({ uuid, word }) => {
+  socket.on("removePartyWord", ({ uuid, word }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(uuid);
     if (!party) return;
 
@@ -70,7 +98,11 @@ function listen(socket) {
     PartyManager.updateAllOnlineParties();
   });
 
-  socket.on("readyUser", async ({ partyUUID, uuid }) => {
+  socket.on("readyUser", async ({ partyUUID, uuid }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(partyUUID);
     if (!party || party.status !== "waiting") return;
 
@@ -86,7 +118,11 @@ function listen(socket) {
     await PartyManager.lookingForStartGame(party);
   });
 
-  socket.on("kickUser", ({ partyUUID, uuid }) => {
+  socket.on("kickUser", ({ partyUUID, uuid }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     let party = PartyManager.get(partyUUID);
     if (!party) return;
 
@@ -96,7 +132,11 @@ function listen(socket) {
     SocketManager.sendToUser(uuid, "kickParty", {});
   });
 
-  socket.on("userLeaveParty", ({ partyUUID, uuid }) => {
+  socket.on("userLeaveParty", ({ partyUUID, uuid }, callback) => {
+    if (callback) {
+      callback({ status: 200 });
+    }
+
     PartyManager.deleteUserFromParty(uuid, partyUUID);
     PartyManager.sendRefreshParty(partyUUID);
   });
